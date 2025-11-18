@@ -206,6 +206,9 @@ For production releases, you should implement code signing:
 **Windows MSI packaging fails**:
 - WiX Toolset is pre-installed on GitHub Windows runners
 - Check Windows-specific path separators in build scripts
+- Verify WiX is in PATH: `Get-Command candle.exe`
+- Check actual MSI output location in build logs
+- MSI may be in `build/compose/binaries/main-release/msi/` instead of `main/msi/`
 
 **Artifacts not found**:
 - Verify build output path matches artifact upload path

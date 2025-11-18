@@ -106,21 +106,52 @@ jobs:
             exit 1
           }
 
+      - name: Verify WiX Toolset
+        run: |
+          Write-Host "Checking for WiX Toolset..."
+          $wixPath = Get-Command candle.exe -ErrorAction SilentlyContinue
+          if ($wixPath) {
+            Write-Host "WiX found at: $($wixPath.Source)"
+          } else {
+            Write-Warning "WiX Toolset not found in PATH"
+          }
+        continue-on-error: true
+
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon --info
+        run: ./gradlew build --no-daemon
 
       - name: Run tests
         run: ./gradlew test --no-daemon
 
       - name: Package Windows MSI
-        run: ./gradlew packageMsi --no-daemon --info
+        run: ./gradlew packageMsi --no-daemon --stacktrace
+
+      - name: Find MSI artifacts
+        run: |
+          Write-Host "Searching for MSI files in build directory..."
+          Get-ChildItem -Path build -Recurse -Filter "*.msi" -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "Found: $($_.FullName)"
+          }
+          Write-Host "`nBuild directory structure:"
+          Get-ChildItem -Path build -Recurse -Directory | Select-Object FullName
+        continue-on-error: true
 
       - name: List build artifacts
         run: |
           if (Test-Path "build/compose/binaries/main/msi") {
+            Write-Host "MSI directory found!"
             Get-ChildItem -Path "build/compose/binaries/main/msi" -Recurse
           } else {
-            Write-Error "MSI directory not found"
+            Write-Host "Expected path not found, checking alternatives..."
+            if (Test-Path "build/compose/binaries/main") {
+              Write-Host "Contents of build/compose/binaries/main:"
+              Get-ChildItem -Path "build/compose/binaries/main" -Recurse
+            }
+            if (Test-Path "build/compose") {
+              Write-Host "Contents of build/compose:"
+              Get-ChildItem -Path "build/compose" -Recurse
+            }
+            Write-Error "MSI directory not found at expected location"
             exit 1
           }
 
@@ -128,7 +159,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RATS-Windows-MSI
-          path: build/compose/binaries/main/msi/*.msi
+          path: |
+            build/compose/binaries/main/msi/*.msi
+            build/compose/binaries/main-release/msi/*.msi
+            build/**/*.msi
           retention-days: 30
           if-no-files-found: error
 
