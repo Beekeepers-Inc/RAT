@@ -159,26 +159,22 @@ jobs:
       - name: List available Gradle tasks
         run: |
           echo "Available packaging tasks:"
-          gradlew.bat tasks --all | findstr /i "package"
-        shell: cmd
+          .\gradlew.bat tasks --all | findstr /i "package"
         continue-on-error: true
 
       - name: Build with Gradle
-        run: gradlew.bat build --no-daemon
-        shell: cmd
+        run: .\gradlew.bat build --no-daemon
 
       - name: Run tests
-        run: gradlew.bat test --no-daemon
-        shell: cmd
+        run: .\gradlew.bat test --no-daemon
 
       - name: Package Windows MSI (with full output)
         run: |
-          echo =========================================
-          echo Running packageMsi task...
-          echo =========================================
-          gradlew.bat packageMsi --no-daemon --info > msi-build.log 2>&1
+          echo "========================================="
+          echo "Running packageMsi task..."
+          echo "========================================="
+          .\gradlew.bat packageMsi --no-daemon --info > msi-build.log 2>&1
           type msi-build.log
-        shell: cmd
 
       - name: Analyze build log
         if: always()
