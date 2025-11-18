@@ -44,14 +44,24 @@ Main workflow that handles building installers for both platforms.
 
 **Runs on**: `windows-latest` (Windows Server 2022)
 
+**Prerequisites**:
+- WiX Toolset (installed automatically via `dotnet tool install --global wix`)
+- JDK 17 with jpackage tool
+- MSI creation requires WiX for jpackage
+
 **Steps**:
 1. Checkout source code
 2. Set up JDK 17 (Temurin distribution)
 3. Cache Gradle dependencies
-4. Build the project (`./gradlew build`)
-5. Run tests (`./gradlew test`)
-6. Create MSI package (`./gradlew packageMsi`)
-7. Upload MSI as artifact
+4. Verify Gradle wrapper JAR exists
+5. Install WiX Toolset (required for MSI packaging)
+6. Verify WiX installation and locate executables
+7. List available Gradle packaging tasks
+8. Build the project (`./gradlew build`)
+9. Run tests (`./gradlew test`)
+10. Create MSI package (`./gradlew packageMsi --stacktrace --info`)
+11. Search for generated MSI files in build directory
+12. Upload MSI as artifact
 
 **Output**: `RATS-Windows-MSI` artifact containing the `.msi` file
 
@@ -204,11 +214,13 @@ For production releases, you should implement code signing:
 - Verify Gradle wrapper has execute permissions
 
 **Windows MSI packaging fails**:
-- WiX Toolset is pre-installed on GitHub Windows runners
-- Check Windows-specific path separators in build scripts
-- Verify WiX is in PATH: `Get-Command candle.exe`
+- WiX Toolset is installed via `dotnet tool install --global wix`
+- If WiX installation fails, MSI packaging will fail
+- Verify WiX is in PATH: `Get-Command wix.exe`
 - Check actual MSI output location in build logs
 - MSI may be in `build/compose/binaries/main-release/msi/` instead of `main/msi/`
+- jpackage (used by Compose Desktop) requires WiX for MSI creation
+- Check Gradle output for jpackage errors
 
 **Artifacts not found**:
 - Verify build output path matches artifact upload path
