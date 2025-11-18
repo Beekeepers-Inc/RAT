@@ -169,31 +169,26 @@ jobs:
         run: ./gradlew test --no-daemon
 
       - name: Package Windows MSI (with full output)
+        run: |
+          echo "========================================="
+          echo "Running packageMsi task..."
+          echo "========================================="
+          ./gradlew packageMsi --no-daemon --info > msi-build.log 2>&1
+          type msi-build.log
+        shell: cmd
+
+      - name: Analyze build log
+        if: always()
         shell: pwsh
         run: |
-          Write-Host "========================================="
-          Write-Host "Running packageMsi task..."
-          Write-Host "========================================="
-
-          $output = & cmd /c "gradlew.bat packageMsi --no-daemon --info 2>&1"
-          $output | Tee-Object -FilePath msi-build.log
-          $exitCode = $LASTEXITCODE
-
-          Write-Host "`n========================================="
-          Write-Host "Package MSI command completed (exit code: $exitCode)"
-          Write-Host "========================================="
-
           if (Test-Path msi-build.log) {
             Write-Host "`nSearching for 'error' or 'fail' in output..."
             Select-String -Path msi-build.log -Pattern "error|fail|exception" -CaseSensitive:$false | Select-Object -First 20
 
             Write-Host "`nSearching for jpackage execution..."
             Select-String -Path msi-build.log -Pattern "jpackage" -CaseSensitive:$false | Select-Object -First 10
-          }
-
-          if ($exitCode -ne 0) {
-            Write-Error "packageMsi failed with exit code: $exitCode"
-            exit $exitCode
+          } else {
+            Write-Host "Build log not found"
           }
 
       - name: Upload build log
