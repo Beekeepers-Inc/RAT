@@ -174,7 +174,9 @@ jobs:
           Write-Host "========================================="
           Write-Host "Running packageMsi task..."
           Write-Host "========================================="
-          & ./gradlew packageMsi --no-daemon --info 2>&1 | Tee-Object -FilePath msi-build.log
+
+          $output = & cmd /c "gradlew.bat packageMsi --no-daemon --info 2>&1"
+          $output | Tee-Object -FilePath msi-build.log
           $exitCode = $LASTEXITCODE
 
           Write-Host "`n========================================="
