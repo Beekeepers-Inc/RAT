@@ -37,6 +37,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Verify Gradle wrapper
+        run: |
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "Error: Gradle wrapper JAR not found"
+            exit 1
+          fi
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -48,7 +55,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon --info
 
       - name: Run tests
         run: ./gradlew test --no-daemon
@@ -92,17 +99,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Verify Gradle wrapper
+        run: |
+          if (!(Test-Path "gradle/wrapper/gradle-wrapper.jar")) {
+            Write-Error "Gradle wrapper JAR not found"
+            exit 1
+          }
+
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon --info
 
       - name: Run tests
         run: ./gradlew test --no-daemon
 
       - name: Package Windows MSI
-        run: ./gradlew packageMsi --no-daemon
+        run: ./gradlew packageMsi --no-daemon --info
 
       - name: List build artifacts
-        run: dir build\compose\binaries\main\msi\
+        run: |
+          if (Test-Path "build/compose/binaries/main/msi") {
+            Get-ChildItem -Path "build/compose/binaries/main/msi" -Recurse
+          } else {
+            Write-Error "MSI directory not found"
+            exit 1
+          }
 
       - name: Upload Windows MSI
         uses: actions/upload-artifact@v4
