@@ -157,15 +157,7 @@ jobs:
         run: ./gradlew test --no-daemon
 
       - name: Package Windows MSI
-        run: |
-          Write-Host "Starting MSI packaging..."
-          ./gradlew packageMsi --no-daemon --stacktrace --info
-          $exitCode = $LASTEXITCODE
-          Write-Host "Gradle exit code: $exitCode"
-          if ($exitCode -ne 0) {
-            Write-Error "packageMsi task failed with exit code: $exitCode"
-            exit $exitCode
-          }
+        run: ./gradlew packageMsi --no-daemon --stacktrace
 
       - name: Find MSI artifacts
         run: |

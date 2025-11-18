@@ -136,6 +136,27 @@ The pipeline will automatically:
 - Caching enabled for faster subsequent builds
 - `--no-daemon` flag used for CI stability
 
+### Windows MSI Requirements
+
+The `build.gradle.kts` includes Windows-specific configuration for MSI generation:
+
+```kotlin
+windows {
+    menuGroup = "RATS"
+    upgradeUuid = "61DAB35E-17CB-43B4-B698-C1A92CAB0D2B"
+}
+```
+
+**Required fields**:
+- `packageName`: Application name (set at `nativeDistributions` level)
+- `packageVersion`: Version number (set at `nativeDistributions` level)
+- `description`: Application description (used in MSI metadata)
+- `vendor`: Publisher name (required for MSI)
+- `menuGroup`: Start Menu folder location
+- `upgradeUuid`: Unique GUID for installer upgrades (keeps same ID across versions)
+
+**Note**: The `upgradeUuid` should remain constant across versions to allow proper upgrades. Generate a new UUID only for a completely different application.
+
 ## Caching Strategy
 
 The pipeline caches:
@@ -221,6 +242,10 @@ For production releases, you should implement code signing:
 - MSI may be in `build/compose/binaries/main-release/msi/` instead of `main/msi/`
 - jpackage (used by Compose Desktop) requires WiX for MSI creation
 - Check Gradle output for jpackage errors
+- Ensure `windows {}` block is configured in `build.gradle.kts` with:
+  - `menuGroup`: Start menu folder name
+  - `upgradeUuid`: Unique identifier for MSI upgrades
+  - `vendor` and `description` are required for MSI metadata
 
 **Artifacts not found**:
 - Verify build output path matches artifact upload path

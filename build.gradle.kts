@@ -42,9 +42,18 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "RATS"
             packageVersion = "1.0.0"
+            description = "Desktop data analysis application"
+            vendor = "RATS"
+            licenseFile.set(project.file("LICENSE").takeIf { it.exists() })
 
             macOS {
                 bundleID = "com.rats.desktop"
+            }
+
+            windows {
+                menuGroup = "RATS"
+                // Upgrade UUID for MSI installer
+                upgradeUuid = "61DAB35E-17CB-43B4-B698-C1A92CAB0D2B"
             }
         }
     }
