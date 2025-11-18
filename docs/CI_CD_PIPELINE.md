@@ -258,13 +258,19 @@ For production releases, you should implement code signing:
 
 ### Debugging
 
-1. Add verbose output:
+1. **Download build logs**:
+   - Go to failed workflow run
+   - Scroll to **Artifacts** section
+   - Download `msi-build-log` (Windows builds only)
+   - Search for "error", "fail", or "jpackage" to identify issues
+
+2. Add verbose output:
    ```yaml
    - name: Build with debug
      run: ./gradlew build --info --stacktrace
    ```
 
-2. Check runner environment:
+3. Check runner environment:
    ```yaml
    - name: Environment info
      run: |
@@ -272,6 +278,12 @@ For production releases, you should implement code signing:
        ./gradlew --version
        echo "OS: $RUNNER_OS"
    ```
+
+4. **Common MSI build issues**:
+   - Check if `jpackage` is available: `jpackage --version`
+   - Verify WiX installation in build log
+   - Look for "Cannot find WiX" or "jpackage failed" messages
+   - Ensure `build/compose` directory is being created
 
 ## Security Considerations
 

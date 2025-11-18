@@ -144,10 +144,22 @@ jobs:
           }
         continue-on-error: true
 
+      - name: Verify jpackage availability
+        run: |
+          Write-Host "Checking for jpackage tool..."
+          $jpackage = Get-Command jpackage -ErrorAction SilentlyContinue
+          if ($jpackage) {
+            Write-Host "jpackage found at: $($jpackage.Source)"
+            jpackage --version
+          } else {
+            Write-Error "jpackage not found in JDK"
+          }
+        continue-on-error: true
+
       - name: List available Gradle tasks
         run: |
           Write-Host "Available packaging tasks:"
-          ./gradlew tasks --group=compose | Select-String -Pattern "package"
+          ./gradlew tasks --all | Select-String -Pattern "package"
         continue-on-error: true
 
       - name: Build with Gradle
@@ -156,8 +168,30 @@ jobs:
       - name: Run tests
         run: ./gradlew test --no-daemon
 
-      - name: Package Windows MSI
-        run: ./gradlew packageMsi --no-daemon --stacktrace
+      - name: Package Windows MSI (with full output)
+        run: |
+          Write-Host "========================================="
+          Write-Host "Running packageMsi task..."
+          Write-Host "========================================="
+          ./gradlew packageMsi --no-daemon --info 2>&1 | Tee-Object -FilePath msi-build.log
+
+          Write-Host "`n========================================="
+          Write-Host "Package MSI command completed"
+          Write-Host "========================================="
+
+          Write-Host "`nSearching for 'error' or 'fail' in output..."
+          Select-String -Path msi-build.log -Pattern "error|fail|exception" -CaseSensitive:$false | Select-Object -First 20
+
+          Write-Host "`nSearching for jpackage execution..."
+          Select-String -Path msi-build.log -Pattern "jpackage" -CaseSensitive:$false | Select-Object -First 10
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi-build-log
+          path: msi-build.log
+          retention-days: 7
 
       - name: Find MSI artifacts
         run: |
@@ -197,7 +231,7 @@ jobs:
       - name: List build artifacts
         run: |
           if (Test-Path "build/compose/binaries/main/msi") {
-            Write-Host "MSI directory found!"
+            Write-Host "SUCCESS: MSI directory found!"
             Get-ChildItem -Path "build/compose/binaries/main/msi" -Recurse
           } else {
             Write-Host "Expected path not found, checking alternatives..."
@@ -209,7 +243,16 @@ jobs:
               Write-Host "Contents of build/compose:"
               Get-ChildItem -Path "build/compose" -Recurse
             }
-            Write-Error "MSI directory not found at expected location"
+
+            Write-Host "`nChecking if build directory exists at all..."
+            if (Test-Path "build") {
+              Write-Host "Build directory exists. Showing top-level contents:"
+              Get-ChildItem -Path "build" | ForEach-Object { Write-Host "  - $($_.Name)" }
+            } else {
+              Write-Host "ERROR: No build directory found!"
+            }
+
+            Write-Error "MSI directory not found at expected location - check msi-build.log artifact for details"
             exit 1
           }
 
