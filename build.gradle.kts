@@ -84,15 +84,6 @@ compose.desktop {
                 // Set writable app directory for DuckDB temp files
                 dirChooser = true
             }
-
-            // JVM arguments to help with native library loading
-            jvmArgs += listOf(
-                "-Djava.io.tmpdir=\${APPDIR}/temp",
-                "-Dorg.duckdb.tmp.dir=\${APPDIR}/temp",
-                // Add verbose logging for debugging (remove in production)
-                // "-verbose:jni",
-                // "-Xlog:library=info"
-            )
         }
     }
 }
