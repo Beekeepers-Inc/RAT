@@ -46,6 +46,9 @@ compose.desktop {
             vendor = "RATS"
             licenseFile.set(project.file("LICENSE").takeIf { it.exists() })
 
+            // Include all dependencies and their native libraries
+            includeAllModules = true
+
             macOS {
                 bundleID = "com.rats.desktop"
             }
@@ -54,7 +57,17 @@ compose.desktop {
                 menuGroup = "RATS"
                 // Upgrade UUID for MSI installer
                 upgradeUuid = "61DAB35E-17CB-43B4-B698-C1A92CAB0D2B"
+                // Ensure console is available for error logging
+                console = true
+                // Set writable app directory for DuckDB temp files
+                dirChooser = true
             }
+
+            // JVM arguments to help with native library loading
+            jvmArgs += listOf(
+                "-Djava.io.tmpdir=\${APPDIR}/temp",
+                "-Dorg.duckdb.tmp.dir=\${APPDIR}/temp"
+            )
         }
     }
 }

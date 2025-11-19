@@ -26,13 +26,28 @@ class DuckDBCore : AutoCloseable {
     private val connection: DuckDBConnection
 
     init {
-        Class.forName("org.duckdb.DuckDBDriver")
-        connection = DriverManager.getConnection("jdbc:duckdb:") as DuckDBConnection
+        try {
+            // Load DuckDB driver
+            Class.forName("org.duckdb.DuckDBDriver")
 
-        // Configure DuckDB for performance
-        connection.createStatement().use { stmt ->
-            stmt.execute("SET memory_limit='4GB'")
-            stmt.execute("SET threads=4")
+            // Create in-memory database connection
+            connection = DriverManager.getConnection("jdbc:duckdb:") as DuckDBConnection
+
+            // Configure DuckDB for performance
+            connection.createStatement().use { stmt ->
+                stmt.execute("SET memory_limit='4GB'")
+                stmt.execute("SET threads=4")
+            }
+        } catch (e: UnsatisfiedLinkError) {
+            // Native library loading failed
+            System.err.println("Failed to load DuckDB native library: ${e.message}")
+            System.err.println("This usually means the DLL/SO file is missing or incompatible")
+            e.printStackTrace()
+            throw RuntimeException("Failed to load DuckDB native library. The application cannot start.", e)
+        } catch (e: Exception) {
+            System.err.println("Failed to initialize DuckDB: ${e.message}")
+            e.printStackTrace()
+            throw RuntimeException("Failed to initialize database engine. Error: ${e.message}", e)
         }
     }
 
