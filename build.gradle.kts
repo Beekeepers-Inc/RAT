@@ -49,8 +49,30 @@ compose.desktop {
             // Include all dependencies and their native libraries
             includeAllModules = true
 
+            // Explicitly include required Java modules for JDBC/SQL support
+            modules(
+                "java.sql",           // Required for JDBC (DuckDB)
+                "java.naming",        // Required for JDBC DataSource
+                "java.desktop",       // Required for Compose UI
+                "java.prefs",         // Required for preferences
+                "jdk.unsupported"     // Required for some native libraries
+            )
+
             macOS {
                 bundleID = "com.rats.desktop"
+                // App Store signing (optional, disable for local testing)
+                // signing {
+                //     sign.set(true)
+                // }
+                // Info.plist configuration
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>LSMinimumSystemVersion</key>
+                        <string>10.15</string>
+                        <key>NSHighResolutionCapable</key>
+                        <true/>
+                    """.trimIndent()
+                }
             }
 
             windows {
@@ -66,7 +88,10 @@ compose.desktop {
             // JVM arguments to help with native library loading
             jvmArgs += listOf(
                 "-Djava.io.tmpdir=\${APPDIR}/temp",
-                "-Dorg.duckdb.tmp.dir=\${APPDIR}/temp"
+                "-Dorg.duckdb.tmp.dir=\${APPDIR}/temp",
+                // Add verbose logging for debugging (remove in production)
+                // "-verbose:jni",
+                // "-Xlog:library=info"
             )
         }
     }

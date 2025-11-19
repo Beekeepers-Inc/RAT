@@ -136,6 +136,25 @@ The pipeline will automatically:
 - Caching enabled for faster subsequent builds
 - `--no-daemon` flag used for CI stability
 
+### Java Modules Configuration (Critical)
+
+jpackage creates a **minimal JRE** that excludes many standard Java modules. You must explicitly include modules your app needs:
+
+```kotlin
+modules(
+    "java.sql",           // Required for JDBC (DuckDB)
+    "java.naming",        // Required for JDBC DataSource
+    "java.desktop",       // Required for Compose UI
+    "java.prefs",         // Required for preferences
+    "jdk.unsupported"     // Required for some native libraries
+)
+```
+
+**Without these modules, you'll get:**
+- `NoClassDefFoundError: java/sql/Driver` - Missing java.sql
+- `ClassNotFoundException: javax.naming.*` - Missing java.naming
+- Silent crashes or "Failed to launch JVM"
+
 ### Windows MSI Requirements
 
 The `build.gradle.kts` includes Windows-specific configuration for MSI generation:
@@ -233,6 +252,13 @@ For production releases, you should implement code signing:
 - Check that `compose.desktop.currentOs` is properly configured
 - Ensure Java version matches (17+)
 - Verify Gradle wrapper has execute permissions
+
+**DMG app crashes on startup**:
+- Run from Terminal to see error: `/Applications/RATS.app/Contents/MacOS/RATS`
+- Check if native libraries are included: `find /Applications/RATS.app -name "*.dylib"`
+- Remove Gatekeeper quarantine: `sudo xattr -rd com.apple.quarantine /Applications/RATS.app`
+- Check Console.app for crash logs
+- See `DEBUG_DMG.md` for detailed troubleshooting steps
 
 **Windows MSI packaging fails**:
 - WiX Toolset is installed via `dotnet tool install --global wix`
