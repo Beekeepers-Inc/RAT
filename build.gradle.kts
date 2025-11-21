@@ -42,9 +42,47 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "RATS"
             packageVersion = "1.0.0"
+            description = "Desktop data analysis application"
+            vendor = "RATS"
+            licenseFile.set(project.file("LICENSE").takeIf { it.exists() })
+
+            // Include all dependencies and their native libraries
+            includeAllModules = true
+
+            // Explicitly include required Java modules for JDBC/SQL support
+            modules(
+                "java.sql",           // Required for JDBC (DuckDB)
+                "java.naming",        // Required for JDBC DataSource
+                "java.desktop",       // Required for Compose UI
+                "java.prefs",         // Required for preferences
+                "jdk.unsupported"     // Required for some native libraries
+            )
 
             macOS {
                 bundleID = "com.rats.desktop"
+                // App Store signing (optional, disable for local testing)
+                // signing {
+                //     sign.set(true)
+                // }
+                // Info.plist configuration
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>LSMinimumSystemVersion</key>
+                        <string>10.15</string>
+                        <key>NSHighResolutionCapable</key>
+                        <true/>
+                    """.trimIndent()
+                }
+            }
+
+            windows {
+                menuGroup = "RATS"
+                // Upgrade UUID for MSI installer
+                upgradeUuid = "61DAB35E-17CB-43B4-B698-C1A92CAB0D2B"
+                // Ensure console is available for error logging
+                console = true
+                // Set writable app directory for DuckDB temp files
+                dirChooser = true
             }
         }
     }
